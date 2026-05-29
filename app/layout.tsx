@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "元素周期表クイズ｜118元素を覚えよう！",
     description: "全118元素を楽しく学べる無料クイズアプリ。中学・高校の化学対策に。",
-    url: "https://chem-app.vercel.app",
+    url: "https://chem-app-8moc.vercel.app",
     siteName: "元素周期表クイズ",
     locale: "ja_JP",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description: "全118元素を楽しく学べる無料クイズアプリ。中学・高校の化学対策に。",
   },
   alternates: {
-    canonical: "https://chem-app.vercel.app",
+    canonical: "https://chem-app-8moc.vercel.app",
   },
 };
 
