@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description: "全118元素を楽しく学べる無料クイズアプリ。中学・高校の化学対策に。",
   },
   alternates: {
-    canonical: "https://chem-app-8moc.vercel.app",
+    canonical: "chem-app-8moc.vercel.app",
   },
 };
 
