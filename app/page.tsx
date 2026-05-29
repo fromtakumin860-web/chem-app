@@ -16,7 +16,7 @@ const CATEGORY_COLORS = {
   unknown: { bg: "#adb5bd22", border: "#adb5bd", label: "その他" },
 };
 
-const getCategory = (no) => {
+const getCategory = (no: number) => {
   if ([1].includes(no)) return "nonmetal";
   if ([2, 10, 18, 36, 54, 86, 118].includes(no)) return "nobleGas";
   if ([3, 11, 19, 37, 55, 87].includes(no)) return "alkali";
