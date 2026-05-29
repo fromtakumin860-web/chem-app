@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const CATEGORY_COLORS = {
+const CATEGORY_COLORS: Record<string, { bg: string; border: string; label: string }> = {
   alkali: { bg: "#ff6b6b22", border: "#ff6b6b", label: "アルカリ金属" },
   alkaline: { bg: "#ffa94d22", border: "#ffa94d", label: "アルカリ土類金属" },
   lanthanoid: { bg: "#a9e34b22", border: "#a9e34b", label: "ランタノイド" },
@@ -16,7 +16,7 @@ const CATEGORY_COLORS = {
   unknown: { bg: "#adb5bd22", border: "#adb5bd", label: "その他" },
 };
 
-const getCategory = (no: number) => {
+const getCategory = (no: number): string => {
   if ([1].includes(no)) return "nonmetal";
   if ([2, 10, 18, 36, 54, 86, 118].includes(no)) return "nobleGas";
   if ([3, 11, 19, 37, 55, 87].includes(no)) return "alkali";
@@ -31,7 +31,15 @@ const getCategory = (no: number) => {
   return "unknown";
 };
 
-const questions = [
+interface Question {
+  no: number;
+  symbol: string;
+  name: string;
+  info: string;
+  electrons: number[];
+}
+
+const questions: Question[] = [
   { no: 1, symbol: "H", name: "水素", info: "宇宙で最も多く存在する最も軽い元素。クリーンな次世代エネルギーとして注目されています。主要な物質の例：水、アンモニア、塩酸、水素燃料、ロケット燃料", electrons: [1] },
   { no: 2, symbol: "He", name: "ヘリウム", info: "最も軽い希ガス。非常に安定しており、絶対に燃えないのが特徴です。主要な物質の例：観測用風船、吸入用ボイスガス、MRI冷却用液体ヘリウム、超伝導マグネット、溶接用保護ガス", electrons: [2] },
   { no: 3, symbol: "Li", name: "リチウム", info: "最も軽い金属。水に浮くほど軽く、エネルギーを高密度に蓄えられます。主要な物質の例：リチウムイオン電池、心臓ペースメーカー、スマートフォンバッテリー、モバイルバッテリー、電気自動車用電池", electrons: [2, 1] },
@@ -152,7 +160,13 @@ const questions = [
   { no: 118, symbol: "Og", name: "オガネソン", info: "現在周期表の右下を締めくくる118番目の最重元素。希ガスに属し、非常に高い反応性を持つ可能性が示唆されています。主要な物質の例：カリホルニウム・カルシウム衝突による史上最重原子核の合成、オガネソンの相対論的電子殻「全電子の平滑化」理論モデル、118番希ガス極限の分極率計算、超重元素の終着点探索データ、近未来の119番元素発見への足がかり基礎研究", electrons: [2, 8, 18, 32, 32, 18, 8] },
 ];
 
-const mainTableLayout = [
+type LayoutItem =
+  | { isRowLabel: true; text: string }
+  | { no: number }
+  | { space: true; count: number }
+  | { isLabel: true; text: string };
+
+const mainTableLayout: LayoutItem[] = [
   { isRowLabel: true, text: "1" }, { no: 1 }, { space: true, count: 16 }, { no: 2 },
   { isRowLabel: true, text: "2" }, { no: 3 }, { no: 4 }, { space: true, count: 10 }, { no: 5 }, { no: 6 }, { no: 7 }, { no: 8 }, { no: 9 }, { no: 10 },
   { isRowLabel: true, text: "3" }, { no: 11 }, { no: 12 }, { space: true, count: 10 }, { no: 13 }, { no: 14 }, { no: 15 }, { no: 16 }, { no: 17 }, { no: 18 },
@@ -165,7 +179,7 @@ const mainTableLayout = [
 const lanthanoids = [57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71];
 const actinoids = [89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103];
 
-function ElectronDiagram({ electrons }) {
+function ElectronDiagram({ electrons }: { electrons: number[] }) {
   const size = 160;
   const cx = size / 2;
   const cy = size / 2;
@@ -195,19 +209,19 @@ function ElectronDiagram({ electrons }) {
 
 export default function App() {
   const [appMode, setAppMode] = useState("EXPLORE");
-  const [selectedEl, setSelectedEl] = useState(null);
-  const [favorites, setFavorites] = useState(() => {
+  const [selectedEl, setSelectedEl] = useState<Question | null>(null);
+  const [favorites, setFavorites] = useState<number[]>(() => {
     try { return JSON.parse(localStorage.getItem("favorites") || "[]"); } catch { return []; }
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [showCategory, setShowCategory] = useState("ALL");
   const [gameState, setGameState] = useState("SELECT_MODE");
-  const [quizList, setQuizList] = useState([]);
+  const [quizList, setQuizList] = useState<Question[]>([]);
   const [quizIndex, setQuizIndex] = useState(0);
   const [input, setInput] = useState("");
   const [result, setResult] = useState("");
   const [isFourChoice, setIsFourChoice] = useState(true);
-  const [choices, setChoices] = useState([]);
+  const [choices, setChoices] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [playedCount, setPlayedCount] = useState(0);
@@ -215,36 +229,36 @@ export default function App() {
   const [endNo, setEndNo] = useState(118);
   const [rangeError, setRangeError] = useState("");
   const [quizStats, setQuizStats] = useState({ total: 0, correct: 0 });
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try { localStorage.setItem("favorites", JSON.stringify(favorites)); } catch {}
   }, [favorites]);
 
-  const toggleFavorite = (no) => {
+  const toggleFavorite = (no: number) => {
     setFavorites(prev => prev.includes(no) ? prev.filter(n => n !== no) : [...prev, no]);
   };
 
-  const matchesSearch = (el) => {
+  const matchesSearch = (el: Question) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return el.name.includes(q) || el.symbol.toLowerCase().includes(q) || String(el.no).includes(q);
   };
 
-  const matchesCategory = (el) => {
+  const matchesCategory = (el: Question) => {
     if (showCategory === "ALL") return true;
     if (showCategory === "FAV") return favorites.includes(el.no);
     return getCategory(el.no) === showCategory;
   };
 
-  const isHighlighted = (no) => {
+  const isHighlighted = (no: number) => {
     const el = questions.find(q => q.no === no);
     if (!el) return false;
     if (appMode === "QUIZ") return no >= startNo && no <= endNo;
     return matchesSearch(el) && matchesCategory(el);
   };
 
-  const handleElementClick = (no) => {
+  const handleElementClick = (no: number) => {
     const found = questions.find(q => q.no === no);
     if (!found) return;
     if (appMode === "EXPLORE") {
@@ -262,7 +276,7 @@ export default function App() {
     setChoices([correct, ...wrong].sort(() => Math.random() - 0.5));
   }, [quizList, quizIndex]);
 
-  const startGame = (fourChoice) => {
+  const startGame = (fourChoice: boolean) => {
     if (startNo > endNo || startNo < 1 || endNo > 118) { setRangeError("有効な範囲を指定してください（1〜118）"); return; }
     setRangeError("");
     setIsFourChoice(fourChoice);
@@ -272,7 +286,7 @@ export default function App() {
     setGameState("PLAYING");
   };
 
-  const checkAnswer = (ans) => {
+  const checkAnswer = (ans: string) => {
     if (hasAnswered) return;
     setHasAnswered(true);
     setPlayedCount(p => p + 1);
@@ -291,11 +305,10 @@ export default function App() {
     if (gameState === "PLAYING" && !isFourChoice && inputRef.current) inputRef.current.focus();
   }, [gameState, quizIndex, isFourChoice]);
 
-  const elBtnStyle = (no, extraHighlight = false) => {
+  const elBtnStyle = (no: number, extraHighlight = false): React.CSSProperties => {
     const cat = getCategory(no);
     const catColor = CATEGORY_COLORS[cat];
     const hi = isHighlighted(no);
-    const isFav = favorites.includes(no);
     return {
       aspectRatio: "1/1",
       background: extraHighlight ? "#4444ff" : hi ? `${catColor.bg}` : "#1c1c2a",
@@ -314,7 +327,7 @@ export default function App() {
     };
   };
 
-  const ElBtn = ({ no }) => {
+  const ElBtn = ({ no }: { no: number }) => {
     const el = questions.find(q => q.no === no);
     if (!el) return null;
     const isQuizRange = appMode === "QUIZ" && no >= startNo && no <= endNo;
@@ -346,11 +359,11 @@ export default function App() {
               </div>
             )}
             <button onClick={() => { setAppMode("EXPLORE"); setGameState("SELECT_MODE"); }}
-              style={{ padding: "8px 20px", fontSize: "14px", borderRadius: "8px", border: "none", background: appMode === "EXPLORE" && gameState === "SELECT_MODE" ? "#ffaa00" : "#1a1a2e", color: appMode === "EXPLORE" && gameState === "SELECT_MODE" ? "#111" : "white", fontWeight: "bold", cursor: "pointer", border: "1px solid #2d2d4d" }}>
+              style={{ padding: "8px 20px", fontSize: "14px", borderRadius: "8px", border: appMode === "EXPLORE" && gameState === "SELECT_MODE" ? "none" : "1px solid #2d2d4d", background: appMode === "EXPLORE" && gameState === "SELECT_MODE" ? "#ffaa00" : "#1a1a2e", color: appMode === "EXPLORE" && gameState === "SELECT_MODE" ? "#111" : "white", fontWeight: "bold", cursor: "pointer" }}>
               📖 図鑑
             </button>
             <button onClick={() => { setAppMode("QUIZ"); setGameState("SELECT_MODE"); }}
-              style={{ padding: "8px 20px", fontSize: "14px", borderRadius: "8px", border: "none", background: appMode === "QUIZ" && gameState === "SELECT_MODE" ? "#5555ff" : "#1a1a2e", color: "white", fontWeight: "bold", cursor: "pointer", border: "1px solid #2d2d4d" }}>
+              style={{ padding: "8px 20px", fontSize: "14px", borderRadius: "8px", border: "1px solid #2d2d4d", background: appMode === "QUIZ" && gameState === "SELECT_MODE" ? "#5555ff" : "#1a1a2e", color: "white", fontWeight: "bold", cursor: "pointer" }}>
               🎯 クイズ
             </button>
           </div>
